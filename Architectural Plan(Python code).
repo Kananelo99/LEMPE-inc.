@@ -141,10 +141,7 @@ def main():
 
     pygame.quit()
     sys.exit()
-
-if __name__ == "__main__":
-    main()
-____________
+__
 def main():
     clock = pygame.time.Clock()
     vertices = generate_tesseract()
@@ -181,16 +178,12 @@ def main():
     pygame.quit()
     sys.exit()
 
-if __name__ == "__main__":
-    main()
 
-_________
+__
 Underground Parking
-_________ 
+__
 This code will display a grid representing parking spots, with purple spots indicating occupied spaces. You can expand this basic design to add entrances, exits, ramps, multiple underground levels, or integrations with sensors and automation
-_________
-
-
+__
 import pygame
 import sys
 
@@ -206,6 +199,76 @@ BG_COLOR = (30, 30, 30)
 
 # Example occupied spots (row, col)
 occupied_spots = [(1, 2), (3, 5), (5, 6), (0, 0), (4, 3)]
+_
+Here is a simple Python code example using Pygame to visualize a green park near a mall with fountains. This code will display a green park area, a grey mall, and animated blue fountains to represent water features
+_
+import pygame
+import sys
+import math
+
+# Screen settings
+WIDTH, HEIGHT = 800, 600
+BG_COLOR = (200, 230, 180)  # Light green for park
+
+# Colors
+PARK_GREEN = (34, 139, 34)
+MALL_GREY = (160, 160, 160)
+FOUNTAIN_BLUE = (30, 144, 255)
+WATER_DOTS = (173, 216, 230)
+PATH_COLOR = (222, 184, 135)
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Green Park Near Mall with Fountains")
+clock = pygame.time.Clock()
+
+# Fountain Parameters
+fountains = [
+    {"pos": (220, 300), "radius": 30},
+    {"pos": (340, 400), "radius": 25},
+    {"pos": (450, 250), "radius": 35},
+]
+
+def draw_park():
+    # Park grass
+    pygame.draw.rect(screen, PARK_GREEN, (0, 0, WIDTH, HEIGHT))
+    # Walking path
+    pygame.draw.rect(screen, PATH_COLOR, (150, 200, 400, 60))
+    pygame.draw.rect(screen, PATH_COLOR, (320, 100, 60, 350))
+
+def draw_mall():
+    # Mall building (gray block)
+    pygame.draw.rect(screen, MALL_GREY, (600, 100, 160, 250))
+    # Mall doors
+    pygame.draw.rect(screen, (120, 120, 120), (675, 320, 40, 30))
+
+def draw_fountains(tick):
+    for fountain in fountains:
+        # Fountain base
+        pygame.draw.circle(screen, FOUNTAIN_BLUE, fountain["pos"], fountain["radius"])
+        # Animate water jets
+        for i in range(8):
+            angle = i * (2 * math.pi / 8) + (tick / 20)
+            x = fountain["pos"][0] + int(math.cos(angle) * (fountain["radius"] + 10))
+            y = fountain["pos"][1] + int(math.sin(angle) * (fountain["radius"] + 10))
+            pygame.draw.circle(screen, WATER_DOTS, (x, y), 5)
+
+def main():
+    tick = 0
+    running = True
+    while running:
+        screen.fill(BG_COLOR)
+        draw_park()
+        draw_mall()
+        draw_fountains(tick)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        tick += 1
+        pygame.display.flip()
+        clock.tick(60)
+    pygame.quit()
+    sys.exit()
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
