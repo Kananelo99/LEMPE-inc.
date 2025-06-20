@@ -1,0 +1,192 @@
+import pygame
+import sys
+import math
+
+# Screen and Colors
+WIDTH, HEIGHT = 1200, 800
+BG_COLOR = (230, 230, 230)
+MALL_W, MALL_H = 900, 700
+MALL_X, MALL_Y = 150, 50
+GLASS_COLOR = (180, 220, 255, 80)
+LOGO_COLOR = (255, 80, 80)
+LOGO_TEXT_COLOR = (255, 255, 255)
+LEVEL_COLOR = (220, 220, 220)
+LIFT_COLOR = (200, 200, 0)
+SHAFT_COLOR = (180, 180, 180)
+ESCALATOR_COLOR = (120, 120, 255)
+STEP_COLOR = (180, 180, 255)
+SHOP_COLOR = (180, 255, 200)
+CORRIDOR_COLOR = (210, 210, 210)
+PARK_COLOR = (34, 139, 34)
+
+LEVELS = 3
+LIFT_WIDTH, LIFT_HEIGHT = 60, 60
+ESCALATOR_WIDTH, ESCALATOR_HEIGHT = 150, 20
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Detailed Multi-Level Mall Visualization")
+clock = pygame.time.Clock()
+font = pygame.font.SysFont('arial', 32, bold=True)
+logo_font = pygame.font.SysFont('impact', 120, bold=True)
+
+class MallLevel:
+    def __init__(self, idx, total):
+        self.idx = idx
+        self.total = total
+        self.y = MALL_Y + (MALL_H // total) * idx
+        self.height = (MALL_H // total)
+        self.shops = []
+        self.corridor_y = self.y + self.height // 2 - 30
+        self.create_shops()
+
+    def create_shops(self):
+        # Two rows of shops per level: one at top, one at bottom
+        shop_h = 80
+        corridor_gap = 80
+        num_shops = 5
+        shop_w = (MALL_W - 2 * corridor_gap) // num_shops - 10
+
+        top = self.y + 10
+        bottom = self.y + self.height - shop_h - 10
+
+        self.shops = []
+        # Top row
+        for i in range(num_shops):
+            x = MALL_X + corridor_gap + i * (shop_w + 10)
+            self.shops.append(pygame.Rect(x, top, shop_w, shop_h))
+        # Bottom row
+        for i in range(num_shops):
+            x = MALL_X + corridor_gap + i * (shop_w + 10)
+            self.shops.append(pygame.Rect(x, bottom, shop_w, shop_h))
+
+    def draw(self):
+        # Draw level base
+        pygame.draw.rect(screen, LEVEL_COLOR, (MALL_X, self.y, MALL_W, self.height))
+        # Draw corridor
+        pygame.draw.rect(screen, CORRIDOR_COLOR, (MALL_X + 80, self.corridor_y, MALL_W - 160, 60))
+        # Draw shops
+        for shop in self.shops:
+            pygame.draw.rect(screen, SHOP_COLOR, shop)
+            pygame.draw.rect(screen, (100, 100, 100), shop, 3)
+        # Draw level label
+        label = font.render(f"Level {self.total - self.idx}", True, (50, 50, 50))
+        screen.blit(label, (MALL_X + 10, self.y + 10))
+
+class Lift:
+    def __init__(self):
+        self.x = MALL_X + MALL_W // 2 - LIFT_WIDTH//2
+        self.y_base = [MALL_Y + (MALL_H//LEVELS) * (i+1) - LIFT_HEIGHT for i in range(LEVELS)]
+        self.current_level = 0
+        self.direction = 1
+        self.pos = self.y_base[0]
+
+    def update(self):
+        # Move lift up and down between levels
+        if self.direction == 1:
+            self.pos -= 2
+                self.current_level += 1
+                if self.current_level == LEVELS-1:
+                    self.direction = -1
+        else:
+            self.pos += 2
+            if self.pos >= self.y_base[self.current_level-1] if self.current_level > 0 else self.pos:
+                self.current_level -= 1
+                if self.current_level == 0:
+                    self.direction = 1
+
+    def draw(self):
+        # Draw shaft
+        pygame.draw.rect(screen, SHAFT_COLOR, (self.x, MALL_Y, LIFT_WIDTH, MALL_H))
+        # Draw lift
+        pygame.draw.rect(screen, LIFT_COLOR, (self.x, self.pos, LIFT_WIDTH, LIFT_HEIGHT))
+        pygame.draw.rect(screen, (50, 50, 50), (self.x, self.pos, LIFT_WIDTH, LIFT_HEIGHT), 3)
+
+class Escalator:
+    def __init__(self, x_offset, direction):
+        self.x = MALL_X + x_offset
+        self.direction = direction # 1 = up, -1 = down
+
+    def draw(self, from_level, to_level, step_offset):
+        y1 = MALL_Y + (MALL_H//LEVELS) * (from_level+1) - 10
+        y2 = MALL_Y + (MALL_H//LEVELS) * (to_level+1) - 10
+        # Draw escalator body
+        pygame.draw.line(screen, ESCALATOR_COLOR, (self.x, y1), (self.x + ESCALATOR_WIDTH, y2), ESCALATOR_HEIGHT)
+        # Draw steps
+        for i in range(8):
+            t = i / 7
+            x = self.x + t * ESCALATOR_WIDTH
+            y = y1 + t * (y2 - y1)
+            # Animate steps
+            phase = (step_offset + i*20) % 120
+            pygame.draw.rect(screen, STEP_COLOR, (x-20, y-4 + self.direction*phase//30, 40, 8))
+
+def draw_glass_facade_and_logo():
+    # Glass facade (front of mall)
+    glass_rect = pygame.Rect(MALL_X - 30, MALL_Y, 40, MALL_H)
+    # Semi-transparent glass
+    glass_surface = pygame.Surface((glass_rect.width, glass_rect.height), pygame.SRCALPHA)
+    glass_surface.fill(GLASS_COLOR)
+    screen.blit(glass_surface, glass_rect.topleft)
+
+    # Giant Logo facing the park
+    logo_rect = pygame.Rect(MALL_X - 200, MALL_Y + MALL_H//2 - 120, 170, 240)
+    pygame.draw.ellipse(screen, LOGO_COLOR, logo_rect)
+    logo_text = logo_font.render("LEMPE", True, LOGO_TEXT_COLOR)
+    logo_text_rect = logo_text.get_rect(center=(logo_rect.centerx, logo_rect.centery))
+    screen.blit(logo_text, logo_text_rect)
+
+def draw_park():
+    # Park in front of the mall
+    park_rect = pygame.Rect(0, 0, MALL_X - 30, HEIGHT)
+    pygame.draw.rect(screen, PARK_COLOR, park_rect)
+    # Add some trees and a path
+    for i in range(6):
+        pygame.draw.circle(screen, (30, 100, 30), (60 + i*60, 180 + int(40*math.sin(i))), 30)
+    pygame.draw.rect(screen, (210, 180, 140), (40, HEIGHT-200, 70, 180))
+
+def main():
+    levels = [MallLevel(i, LEVELS) for i in range(LEVELS)]
+    lift = Lift()
+    escalators = [
+        Escalator(120, 1),  # Up
+        Escalator(250, -1), # Down
+        Escalator(770, 1),  # Up, right side
+        Escalator(630, -1)  # Down, right side
+    ]
+
+    step_offset = 0
+    running = True
+    while running:
+        screen.fill(BG_COLOR)
+        draw_park()
+        # Mall structure
+        pygame.draw.rect(screen, (180, 180, 180), (MALL_X, MALL_Y, MALL_W, MALL_H), border_radius=12)
+        # Draw facade and logo
+        draw_glass_facade_and_logo()
+        # Draw levels
+        for lvl in levels:
+            lvl.draw()
+        # Draw lift
+        lift.update()
+        lift.draw()
+        # Draw escalators between each pair of levels
+        for i in range(LEVELS-1):
+            escalators[0].draw(i, i+1, step_offset)
+            escalators[1].draw(i+1, i, step_offset)
+            escalators[2].draw(i, i+1, step_offset)
+            escalators[3].draw(i+1, i, step_offset)
+        # Animate escalator steps
+        step_offset = (step_offset + 2) % 120
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        pygame.display.flip()
+        clock.tick(60)
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
