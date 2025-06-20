@@ -51,7 +51,100 @@ def project_3d_to_2d(point, fov=500):
 def connect_edges(projected_points, edges):
     for edge in edges:
         pygame.draw.line(screen, WHITE, projected_points[edge[0]], projected_points[edge[1]], 1)
+____________
+Lifts and escalators
 
+import pygame
+import sys
+
+# Settings
+WIDTH, HEIGHT = 800, 600
+BG_COLOR = (30, 30, 30)
+ESCALATOR_COLOR = (100, 100, 255)
+LIFT_COLOR = (200, 200, 0)
+SHAFT_COLOR = (80, 80, 80)
+FLOORS = 5
+LIFT_WIDTH, LIFT_HEIGHT = 60, 40
+ESCALATOR_WIDTH, ESCALATOR_HEIGHT = 150, 20
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Escalators and Lifts")
+clock = pygame.time.Clock()
+
+# Escalator properties
+escalator_start = (150, 500)
+escalator_end = (300, 200)
+escalator_steps = 10
+step_offset = 0
+
+# Lift properties
+lift_x = 600
+lift_floor = 0
+lift_direction = 1  # 1=up, -1=down
+lift_speed = 1
+
+def draw_escalator(offset):
+    # Draw escalator body
+    pygame.draw.line(screen, ESCALATOR_COLOR, escalator_start, escalator_end, ESCALATOR_HEIGHT)
+    # Draw steps
+    for i in range(escalator_steps):
+        t = i / (escalator_steps - 1)
+        x = escalator_start[0] + t * (escalator_end[0] - escalator_start[0])
+        y = escalator_start[1] + t * (escalator_end[1] - escalator_start[1])
+        # Animate steps moving up
+        y += ((offset + i * 10) % 100) - 50
+        pygame.draw.rect(screen, (180, 180, 255), (x - 20, y - 5, 40, 10))
+
+def draw_lift(floor):
+    # Draw shaft
+    pygame.draw.rect(screen, SHAFT_COLOR, (lift_x, 100, LIFT_WIDTH, HEIGHT - 200))
+    # Draw floors
+    for f in range(FLOORS):
+        y = HEIGHT - 100 - f * ((HEIGHT - 200) // (FLOORS - 1))
+        pygame.draw.line(screen, (80, 80, 80), (lift_x, y), (lift_x + LIFT_WIDTH, y), 2)
+    # Draw lift
+    lift_y = HEIGHT - 100 - floor * ((HEIGHT - 200) // (FLOORS - 1)) - LIFT_HEIGHT
+    pygame.draw.rect(screen, LIFT_COLOR, (lift_x, lift_y, LIFT_WIDTH, LIFT_HEIGHT))
+
+def main():
+    global step_offset, lift_floor, lift_direction
+    running = True
+    while running:
+        screen.fill(BG_COLOR)
+        draw_escalator(step_offset)
+        draw_lift(lift_floor)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Animate escalator steps
+        step_offset += 2
+        if step_offset > 100:
+            step_offset = 0
+
+        # Animate lift
+        if lift_direction == 1:
+            lift_floor += lift_speed * 0.02
+            if lift_floor >= FLOORS - 1:
+                lift_floor = FLOORS - 1
+                lift_direction = -1
+        else:
+            lift_floor -= lift_speed * 0.02
+            if lift_floor <= 0:
+                lift_floor = 0
+                lift_direction = 1
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
+____________
 def main():
     clock = pygame.time.Clock()
     vertices = generate_tesseract()
