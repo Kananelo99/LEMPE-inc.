@@ -90,3 +90,60 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+_________
+Underground Parking
+_________ 
+This code will display a grid representing parking spots, with purple spots indicating occupied spaces. You can expand this basic design to add entrances, exits, ramps, multiple underground levels, or integrations with sensors and automation
+_________
+
+
+import pygame
+import sys
+
+# Constants
+WIDTH, HEIGHT = 800, 600
+ROWS, COLS = 6, 10  # Grid size: 6 rows, 10 columns
+SPOT_SIZE = 60
+MARGIN = 10
+PARKING_COLOR = (180, 180, 180)
+OCCUPIED_COLOR = (128, 0, 128)  # Purple for occupied
+FREE_COLOR = (50, 200, 50)
+BG_COLOR = (30, 30, 30)
+
+# Example occupied spots (row, col)
+occupied_spots = [(1, 2), (3, 5), (5, 6), (0, 0), (4, 3)]
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Underground Parking Design")
+clock = pygame.time.Clock()
+
+def draw_parking_lot():
+    screen.fill(BG_COLOR)
+    for row in range(ROWS):
+        for col in range(COLS):
+            x = MARGIN + col * (SPOT_SIZE + MARGIN)
+            y = MARGIN + row * (SPOT_SIZE + MARGIN)
+            rect = pygame.Rect(x, y, SPOT_SIZE, SPOT_SIZE)
+            if (row, col) in occupied_spots:
+                color = OCCUPIED_COLOR
+            else:
+                color = FREE_COLOR
+            pygame.draw.rect(screen, color, rect)
+            pygame.draw.rect(screen, PARKING_COLOR, rect, 3)  # border
+
+def main():
+    running = True
+    while running:
+        draw_parking_lot()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        pygame.display.flip()
+        clock.tick(30)
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
