@@ -1,0 +1,92 @@
+import pygame
+import numpy as np
+import sys
+import math
+
+WIDTH, HEIGHT = 800, 600
+BLACK = (10, 10, 10)
+WHITE = (240, 240, 240)
+
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("4D Rotational Landscape")
+
+# Define vertices of a tesseract (4D cube)
+def generate_tesseract():
+    vertices = []
+    for x in [-1, 1]:
+        for y in [-1, 1]:
+            for z in [-1, 1]:
+                for w in [-1, 1]:
+                    vertices.append(np.array([x, y, z, w]))
+    return vertices
+
+# 4D rotation matrices
+def rotate_4d(vec, angle, i, j):
+    mat = np.identity(4)
+    c, s = math.cos(angle), math.sin(angle)
+    mat[i, i] = c
+    mat[i, j] = -s
+    mat[j, i] = s
+    mat[j, j] = c
+    return vec @ mat
+
+# Project 4D -> 3D
+def project_4d_to_3d(point, distance=3):
+    w = 1 / (distance - point[3])
+    projection_matrix = np.array([
+        [w, 0, 0],
+        [0, w, 0],
+        [0, 0, w]
+    ])
+    return projection_matrix @ point[:3]
+
+# Project 3D -> 2D (simple perspective)
+def project_3d_to_2d(point, fov=500):
+    factor = fov / (fov + point[2])
+    x = point[0] * factor + WIDTH // 2
+    y = -point[1] * factor + HEIGHT // 2
+    return (int(x), int(y))
+
+def connect_edges(projected_points, edges):
+    for edge in edges:
+        pygame.draw.line(screen, WHITE, projected_points[edge[0]], projected_points[edge[1]], 1)
+
+def main():
+    clock = pygame.time.Clock()
+    vertices = generate_tesseract()
+
+    # Edges for a tesseract (from vertex indices)
+    edges = []
+    for i in range(len(vertices)):
+        for j in range(i + 1, len(vertices)):
+            if np.sum(np.abs(vertices[i] - vertices[j])) == 2:
+                edges.append((i, j))
+
+    angle = 0
+    running = True
+    while running:
+        clock.tick(60)
+        screen.fill(BLACK)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        projected_points = []
+        for v in vertices:
+            rotated = rotate_4d(v, angle, 0, 3)  # Rotate in x-w
+            rotated = rotate_4d(rotated, angle / 2, 1, 2)  # Rotate in y-z
+            projected3d = project_4d_to_3d(rotated)
+            projected2d = project_3d_to_2d(projected3d)
+            projected_points.append(projected2d)
+
+        connect_edges(projected_points, edges)
+        pygame.display.flip()
+        angle += 0.01
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
